@@ -11,7 +11,8 @@
   },
   "permissions": [
     "storage",
-    "bookmarks"
+    "bookmarks",
+    "tabs"
   ],
   "host_permissions": [
     "https://www.bing.com/*",
@@ -19,6 +20,10 @@
     "https://wttr.in/*",
     "https://www.google.com/*"
   ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "快速添加网站"
+  },
   "chrome_url_overrides": {
     "newtab": "index.html"
   }
