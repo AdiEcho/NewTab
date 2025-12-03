@@ -15,11 +15,24 @@ import {
   Trash2,
   MessageSquare,
   RotateCcw,
+  BookMarked,
 } from 'lucide-react';
 import { useStore } from '@/stores/useStore';
 import { createWebDAVClient } from '@/utils/api';
-import type { ThemeMode, WallpaperSource, HitokotoType } from '@/types';
+import type { ThemeMode, WallpaperSource, HitokotoType, CardSize, AddButtonPosition } from '@/types';
 import { HITOKOTO_TYPES, DEFAULT_SEARCH_ENGINES } from '@/types';
+
+const CARD_SIZE_OPTIONS: { value: CardSize; label: string }[] = [
+  { value: 'small', label: '小' },
+  { value: 'medium', label: '中' },
+  { value: 'large', label: '大' },
+];
+
+const ADD_BUTTON_OPTIONS: { value: AddButtonPosition; label: string }[] = [
+  { value: 'card', label: '卡片处' },
+  { value: 'corner', label: '右下角' },
+  { value: 'both', label: '都显示' },
+];
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -36,6 +49,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   const importData = useStore((state) => state.importData);
   const resetSettings = useStore((state) => state.resetSettings);
   const resetAll = useStore((state) => state.resetAll);
+  const addSite = useStore((state) => state.addSite);
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('appearance');
   const [newEngine, setNewEngine] = useState({ name: '', url: '', icon: '' });
@@ -80,6 +94,46 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
       }
     };
     input.click();
+  };
+
+  const handleImportBookmarks = async () => {
+    if (!chrome?.bookmarks) {
+      alert('书签功能仅在浏览器扩展中可用');
+      return;
+    }
+
+    try {
+      const bookmarks = await chrome.bookmarks.getTree();
+      const sites: { name: string; url: string }[] = [];
+
+      const traverse = (nodes: chrome.bookmarks.BookmarkTreeNode[]) => {
+        for (const node of nodes) {
+          if (node.url) {
+            sites.push({ name: node.title, url: node.url });
+          }
+          if (node.children) {
+            traverse(node.children);
+          }
+        }
+      };
+
+      traverse(bookmarks);
+
+      const importCount = Math.min(sites.length, 50);
+      for (let i = 0; i < importCount; i++) {
+        const site = sites[i];
+        addSite({
+          name: site.name || new URL(site.url).hostname,
+          url: site.url,
+          groupId: 'default',
+        });
+      }
+
+      alert(`成功导入 ${importCount} 个书签`);
+    } catch (error) {
+      console.error('Import bookmarks error:', error);
+      alert('导入书签失败');
+    }
   };
 
   const handleTestWebDAV = async () => {
@@ -285,6 +339,42 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                   />
                 </div>
 
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">卡片大小</h3>
+                  <div className="flex gap-2">
+                    {CARD_SIZE_OPTIONS.map(({ value, label }) => (
+                      <button
+                        key={value}
+                        onClick={() => updateSettings({ cardSize: value })}
+                        className={`px-4 py-2 rounded-lg border transition-colors ${
+                          settings.cardSize !== value ? 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400' : ''
+                        }`}
+                        style={activeStyle(settings.cardSize === value)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">添加按钮位置</h3>
+                  <div className="flex gap-2">
+                    {ADD_BUTTON_OPTIONS.map(({ value, label }) => (
+                      <button
+                        key={value}
+                        onClick={() => updateSettings({ addButtonPosition: value })}
+                        className={`px-4 py-2 rounded-lg border transition-colors ${
+                          settings.addButtonPosition !== value ? 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400' : ''
+                        }`}
+                        style={activeStyle(settings.addButtonPosition === value)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-700 dark:text-gray-300">显示随机壁纸按钮</span>
                   <button
@@ -483,6 +573,13 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                     >
                       <Upload className="w-4 h-4" />
                       导入配置
+                    </button>
+                    <button
+                      onClick={handleImportBookmarks}
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <BookMarked className="w-4 h-4" />
+                      从书签导入
                     </button>
                   </div>
                 </div>

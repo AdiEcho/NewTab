@@ -71,12 +71,18 @@ export interface WebDAVConfig {
   autoSync: boolean;
 }
 
+export type CardSize = 'small' | 'medium' | 'large';
+
+export type AddButtonPosition = 'card' | 'corner' | 'both';
+
 export interface Settings {
   theme: ThemeMode;
   themeColor: string;
   wallpaper: WallpaperConfig;
   cardRadius: number;
   cardOpacity: number;
+  cardSize: CardSize;
+  addButtonPosition: AddButtonPosition;
   showRandomWallpaperBtn: boolean;
   showWeather: boolean;
   weatherCity: string;
@@ -111,6 +117,8 @@ export const DEFAULT_SETTINGS: Settings = {
   },
   cardRadius: 12,
   cardOpacity: 0.8,
+  cardSize: 'medium',
+  addButtonPosition: 'both',
   showRandomWallpaperBtn: true,
   showWeather: true,
   weatherCity: '',

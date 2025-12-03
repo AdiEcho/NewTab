@@ -98,8 +98,102 @@ function getWeatherIcon(code: string): string {
 
 export async function getFaviconUrl(url: string): Promise<string> {
   try {
-    const domain = new URL(url).hostname;
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+    const origin = urlObj.origin;
+    
+    // 尝试从网站 HTML 中获取图标链接
+    try {
+      const response = await fetch(urlObj.href, {
+        method: 'GET',
+        signal: AbortSignal.timeout(3000),
+      });
+      
+      if (response.ok) {
+        const html = await response.text();
+        // 匹配 <link rel="icon" href="..."> 或 <link rel="shortcut icon" href="...">
+        const iconMatch = html.match(/<link[^>]*rel=["'](?:shortcut )?icon["'][^>]*href=["']([^"']+)["']/i)
+          || html.match(/<link[^>]*href=["']([^"']+)["'][^>]*rel=["'](?:shortcut )?icon["']/i);
+        
+        if (iconMatch?.[1]) {
+          const iconHref = iconMatch[1];
+          // 处理相对路径
+          if (iconHref.startsWith('//')) {
+            return `https:${iconHref}`;
+          } else if (iconHref.startsWith('/')) {
+            return `${origin}${iconHref}`;
+          } else if (iconHref.startsWith('http')) {
+            return iconHref;
+          } else {
+            return `${origin}/${iconHref}`;
+          }
+        }
+      }
+    } catch {
+      // 解析失败，继续尝试其他方式
+    }
+    
+    // 尝试默认的 favicon.ico
+    const faviconUrl = `${origin}/favicon.ico`;
+    try {
+      const faviconResponse = await fetch(faviconUrl, {
+        method: 'HEAD',
+        signal: AbortSignal.timeout(2000),
+      });
+      if (faviconResponse.ok) {
+        return faviconUrl;
+      }
+    } catch {
+      // favicon.ico 不存在
+    }
+    
+    // 回退到 Google 的 favicon 服务
+    return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
+  } catch {
+    return '';
+  }
+}
+
+export async function getSiteTitle(url: string): Promise<string> {
+  try {
+    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+    
+    // 尝试获取网页标题
+    const response = await fetch(urlObj.href, {
+      method: 'GET',
+      signal: AbortSignal.timeout(3000),
+    });
+    
+    if (response.ok) {
+      const html = await response.text();
+        const match = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        if (match?.[1]) {
+          // 解码 HTML 实体
+          let title = match[1].trim()
+            title = title.split(/\s*[-|–—]\s*/)[0].trim();
+          if (title.length > 0 && title.length < 50) {
+            return title;
+        }
+      }
+    }
+  } catch {
+    // fetch 失败时回退到域名解析
+  }
+  
+  // 从域名生成名称
+  return getDomainName(url);
+}
+
+function getDomainName(url: string): string {
+  try {
+    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+    const domain = urlObj.hostname.replace(/^www\./, '');
+    
+    // 提取主域名部分并格式化
+    const parts = domain.split('.');
+    const name = parts.length > 1 ? parts[parts.length - 2] : parts[0];
+    
+    // 首字母大写
+    return name.charAt(0).toUpperCase() + name.slice(1);
   } catch {
     return '';
   }

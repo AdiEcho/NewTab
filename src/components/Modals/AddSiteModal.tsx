@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Link, Type, Image, Folder } from 'lucide-react';
 import { useStore } from '@/stores/useStore';
-import { getFaviconUrl } from '@/utils/api';
+import { getFaviconUrl, getSiteTitle } from '@/utils/api';
 import type { Site } from '@/types';
 
 interface AddSiteModalProps {
@@ -20,6 +20,8 @@ export function AddSiteModal({ site, onClose }: AddSiteModalProps) {
   const [icon, setIcon] = useState(site?.icon || '');
   const [groupId, setGroupId] = useState(site?.groupId || 'default');
   const [autoIcon, setAutoIcon] = useState(!site?.icon);
+  const [autoName, setAutoName] = useState(!site?.name);
+  const [loadingName, setLoadingName] = useState(false);
 
   useEffect(() => {
     if (autoIcon && url) {
@@ -30,6 +32,18 @@ export function AddSiteModal({ site, onClose }: AddSiteModalProps) {
       return () => clearTimeout(timer);
     }
   }, [url, autoIcon]);
+
+  useEffect(() => {
+    if (autoName && url) {
+      const timer = setTimeout(async () => {
+        setLoadingName(true);
+        const title = await getSiteTitle(url);
+        if (title) setName(title);
+        setLoadingName(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [url, autoName]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,12 +87,16 @@ export function AddSiteModal({ site, onClose }: AddSiteModalProps) {
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Type className="w-4 h-4" />
               网站名称
+              {loadingName && <span className="text-xs text-gray-400">获取中...</span>}
             </label>
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="例如：Google"
+              onChange={(e) => {
+                setName(e.target.value);
+                setAutoName(false);
+              }}
+              placeholder="自动获取或手动输入"
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 outline-none transition-all focus:border-[var(--theme-color)]"
               required
             />

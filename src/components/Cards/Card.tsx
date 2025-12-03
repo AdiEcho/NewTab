@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { MoreVertical, Edit, Trash2, FolderInput } from 'lucide-react';
 import { useStore } from '@/stores/useStore';
-import type { Site } from '@/types';
+import type { Site, CardSize } from '@/types';
+
+const CARD_SIZES: Record<CardSize, { icon: number; padding: number; maxWidth: number }> = {
+  small: { icon: 32, padding: 12, maxWidth: 60 },
+  medium: { icon: 48, padding: 16, maxWidth: 80 },
+  large: { icon: 64, padding: 20, maxWidth: 100 },
+};
 
 interface CardProps {
   site: Site;
@@ -33,6 +39,14 @@ export function Card({ site, onEdit }: CardProps) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const sizeConfig = CARD_SIZES[settings.cardSize || 'medium'];
+  
+  const isDark = useMemo(() => {
+    if (settings.theme === 'dark') return true;
+    if (settings.theme === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }, [settings.theme]);
+
   const handleClick = () => {
     window.location.href = site.url;
   };
@@ -56,25 +70,43 @@ export function Card({ site, onEdit }: CardProps) {
         {...attributes}
         {...listeners}
         onClick={handleClick}
-        className="flex flex-col items-center gap-2 p-4 rounded-xl cursor-pointer transition-all"
+        className="flex flex-col items-center gap-2 cursor-pointer transition-all"
         style={{
-          backgroundColor: `rgba(255, 255, 255, ${settings.cardOpacity})`,
+          backgroundColor: isDark 
+            ? `rgba(55, 65, 81, ${settings.cardOpacity})` 
+            : `rgba(255, 255, 255, ${settings.cardOpacity})`,
           borderRadius: `${settings.cardRadius}px`,
+          padding: `${sizeConfig.padding}px`,
         }}
       >
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center bg-gray-100 dark:bg-gray-700 overflow-hidden"
-          style={{ borderRadius: `${settings.cardRadius * 0.8}px` }}
+          className="rounded-xl flex items-center justify-center bg-gray-100 dark:bg-gray-600 overflow-hidden"
+          style={{ 
+            borderRadius: `${settings.cardRadius * 0.8}px`,
+            width: `${sizeConfig.icon}px`,
+            height: `${sizeConfig.icon}px`,
+          }}
         >
           {site.icon ? (
-            <img src={site.icon} alt="" className="w-8 h-8 object-contain" />
+            <img 
+              src={site.icon} 
+              alt="" 
+              className="object-contain"
+              style={{ width: `${sizeConfig.icon * 0.67}px`, height: `${sizeConfig.icon * 0.67}px` }}
+            />
           ) : (
-            <span className="text-2xl font-bold text-gray-400">
+            <span 
+              className="font-bold text-gray-400"
+              style={{ fontSize: `${sizeConfig.icon * 0.5}px` }}
+            >
               {site.name.charAt(0).toUpperCase()}
             </span>
           )}
         </div>
-        <span className="text-sm text-gray-700 dark:text-gray-200 truncate max-w-[80px]">
+        <span 
+          className="text-sm text-gray-700 dark:text-gray-200 truncate"
+          style={{ maxWidth: `${sizeConfig.maxWidth}px` }}
+        >
           {site.name}
         </span>
       </div>
