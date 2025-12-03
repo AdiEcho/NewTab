@@ -9,6 +9,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -37,6 +39,9 @@ export function CardGrid() {
 
   const [editingSite, setEditingSite] = useState<Site | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const activeSite = activeId ? sites.find((s) => s.id === activeId) : null;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -52,6 +57,10 @@ export function CardGrid() {
       ? sites
       : sites.filter((site) => site.groupId === activeGroup);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
@@ -59,6 +68,7 @@ export function CardGrid() {
       const newIndex = sites.findIndex((s) => s.id === over.id);
       reorderSites(arrayMove(sites, oldIndex, newIndex));
     }
+    setActiveId(null);
   };
 
   return (
@@ -68,6 +78,7 @@ export function CardGrid() {
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={filteredSites.map((s) => s.id)} strategy={rectSortingStrategy}>
@@ -76,7 +87,7 @@ export function CardGrid() {
             className={`grid ${GRID_COLS[cardSize]} gap-4`}
           >
             {filteredSites.map((site) => (
-              <Card key={site.id} site={site} onEdit={setEditingSite} />
+              <Card key={site.id} site={site} onEdit={setEditingSite} isDragOverlay={false} />
             ))}
             {(settings.addButtonPosition === 'card' || settings.addButtonPosition === 'both') && (
               <motion.button
@@ -96,6 +107,11 @@ export function CardGrid() {
             )}
           </motion.div>
         </SortableContext>
+        <DragOverlay>
+          {activeSite ? (
+            <Card site={activeSite} onEdit={() => {}} isDragOverlay={true} />
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       {filteredSites.length === 0 && settings.addButtonPosition === 'corner' && (

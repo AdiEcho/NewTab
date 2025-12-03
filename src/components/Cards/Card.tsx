@@ -15,9 +15,10 @@ const CARD_SIZES: Record<CardSize, { icon: number; padding: number; maxWidth: nu
 interface CardProps {
   site: Site;
   onEdit: (site: Site) => void;
+  isDragOverlay?: boolean;
 }
 
-export function Card({ site, onEdit }: CardProps) {
+export function Card({ site, onEdit, isDragOverlay = false }: CardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const settings = useStore((state) => state.settings);
   const groups = useStore((state) => state.groups);
@@ -36,7 +37,8 @@ export function Card({ site, onEdit }: CardProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.4 : 1,
+    scale: isDragging ? 0.95 : 1,
   };
 
   const sizeConfig = CARD_SIZES[settings.cardSize || 'medium'];
@@ -70,13 +72,19 @@ export function Card({ site, onEdit }: CardProps) {
         {...attributes}
         {...listeners}
         onClick={handleClick}
-        className="flex flex-col items-center gap-2 cursor-pointer transition-all"
+        className={`flex flex-col items-center gap-2 cursor-pointer transition-all ${
+          isDragOverlay ? 'shadow-2xl ring-2 ring-white/30' : ''
+        }`}
         style={{
           backgroundColor: isDark 
             ? `rgba(55, 65, 81, ${settings.cardOpacity})` 
             : `rgba(255, 255, 255, ${settings.cardOpacity})`,
           borderRadius: `${settings.cardRadius}px`,
           padding: `${sizeConfig.padding}px`,
+          backdropFilter: settings.cardGlassEffect ? `blur(${settings.cardBlur}px)` : undefined,
+          WebkitBackdropFilter: settings.cardGlassEffect ? `blur(${settings.cardBlur}px)` : undefined,
+          transform: isDragOverlay ? 'scale(1.05)' : undefined,
+          cursor: isDragOverlay ? 'grabbing' : undefined,
         }}
       >
         <div

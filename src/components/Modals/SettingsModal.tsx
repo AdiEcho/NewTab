@@ -339,6 +339,39 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                   />
                 </div>
 
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">磨砂玻璃效果</span>
+                  <button
+                    onClick={() => updateSettings({ cardGlassEffect: !settings.cardGlassEffect })}
+                    className={`w-12 h-6 rounded-full transition-colors ${
+                      !settings.cardGlassEffect ? 'bg-gray-300 dark:bg-gray-600' : ''
+                    }`}
+                    style={toggleStyle(settings.cardGlassEffect)}
+                  >
+                    <div
+                      className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                        settings.cardGlassEffect ? 'translate-x-6' : 'translate-x-0.5'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {settings.cardGlassEffect && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                      模糊程度: {settings.cardBlur}px
+                    </h3>
+                    <input
+                      type="range"
+                      min="0"
+                      max="30"
+                      value={settings.cardBlur}
+                      onChange={(e) => updateSettings({ cardBlur: parseInt(e.target.value) })}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">卡片大小</h3>
                   <div className="flex gap-2">

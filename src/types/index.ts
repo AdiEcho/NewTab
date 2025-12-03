@@ -81,6 +81,8 @@ export interface Settings {
   wallpaper: WallpaperConfig;
   cardRadius: number;
   cardOpacity: number;
+  cardGlassEffect: boolean;
+  cardBlur: number;
   cardSize: CardSize;
   addButtonPosition: AddButtonPosition;
   showRandomWallpaperBtn: boolean;
@@ -117,6 +119,8 @@ export const DEFAULT_SETTINGS: Settings = {
   },
   cardRadius: 12,
   cardOpacity: 0.8,
+  cardGlassEffect: false,
+  cardBlur: 10,
   cardSize: 'medium',
   addButtonPosition: 'both',
   showRandomWallpaperBtn: true,

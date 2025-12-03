@@ -99,54 +99,6 @@ function getWeatherIcon(code: string): string {
 export async function getFaviconUrl(url: string): Promise<string> {
   try {
     const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
-    const origin = urlObj.origin;
-    
-    // 尝试从网站 HTML 中获取图标链接
-    try {
-      const response = await fetch(urlObj.href, {
-        method: 'GET',
-        signal: AbortSignal.timeout(3000),
-      });
-      
-      if (response.ok) {
-        const html = await response.text();
-        // 匹配 <link rel="icon" href="..."> 或 <link rel="shortcut icon" href="...">
-        const iconMatch = html.match(/<link[^>]*rel=["'](?:shortcut )?icon["'][^>]*href=["']([^"']+)["']/i)
-          || html.match(/<link[^>]*href=["']([^"']+)["'][^>]*rel=["'](?:shortcut )?icon["']/i);
-        
-        if (iconMatch?.[1]) {
-          const iconHref = iconMatch[1];
-          // 处理相对路径
-          if (iconHref.startsWith('//')) {
-            return `https:${iconHref}`;
-          } else if (iconHref.startsWith('/')) {
-            return `${origin}${iconHref}`;
-          } else if (iconHref.startsWith('http')) {
-            return iconHref;
-          } else {
-            return `${origin}/${iconHref}`;
-          }
-        }
-      }
-    } catch {
-      // 解析失败，继续尝试其他方式
-    }
-    
-    // 尝试默认的 favicon.ico
-    const faviconUrl = `${origin}/favicon.ico`;
-    try {
-      const faviconResponse = await fetch(faviconUrl, {
-        method: 'HEAD',
-        signal: AbortSignal.timeout(2000),
-      });
-      if (faviconResponse.ok) {
-        return faviconUrl;
-      }
-    } catch {
-      // favicon.ico 不存在
-    }
-    
-    // 回退到 Google 的 favicon 服务
     return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
   } catch {
     return '';
