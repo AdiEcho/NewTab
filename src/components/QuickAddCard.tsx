@@ -100,7 +100,7 @@ export function QuickAddCard() {
 
   if (loading) {
     return (
-      <div className={`p-6 flex items-center justify-center ${baseClasses}`}>
+      <div className={`p-6 min-h-[200px] flex items-center justify-center ${baseClasses}`}>
         <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--theme-color)' }} />
       </div>
     );
@@ -108,7 +108,7 @@ export function QuickAddCard() {
 
   if (success) {
     return (
-      <div className={`p-6 flex flex-col items-center justify-center gap-3 ${baseClasses}`}>
+      <div className={`p-6 min-h-[200px] flex flex-col items-center justify-center gap-3 ${baseClasses}`}>
         <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--theme-color)' }}>
           <Check className="w-6 h-6 text-white" />
         </div>
@@ -119,7 +119,7 @@ export function QuickAddCard() {
 
   if (error) {
     return (
-      <div className={`p-6 flex flex-col items-center justify-center gap-3 ${baseClasses}`}>
+      <div className={`p-6 min-h-[200px] flex flex-col items-center justify-center gap-3 ${baseClasses}`}>
         <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center">
           <X className="w-6 h-6 text-white" />
         </div>
